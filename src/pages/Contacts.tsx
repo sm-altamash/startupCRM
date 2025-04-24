@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,8 +24,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import AddContactModal from "@/components/modals/AddContactModal";
 
-// Sample contacts data
 const contacts = [
   {
     id: 1,
@@ -92,10 +91,12 @@ const statusColors = {
 };
 
 const Contacts = () => {
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [contactsList, setContactsList] = useState(contacts);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
-  const filteredContacts = contacts.filter(contact => {
+  const filteredContacts = contactsList.filter(contact => {
     const matchesSearch = 
       contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -105,21 +106,23 @@ const Contacts = () => {
     return matchesSearch && contact.status === activeTab;
   });
 
+  const handleAddContact = (newContact: any) => {
+    setContactsList((prev) => [...prev, newContact]);
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Contacts</h1>
           <p className="text-muted-foreground">Manage your contacts and leads</p>
         </div>
-        <Button>
+        <Button onClick={() => setIsAddModalOpen(true)}>
           <UserPlus className="h-4 w-4 mr-2" />
           Add Contact
         </Button>
       </div>
 
-      {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="relative col-span-2">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
@@ -152,7 +155,6 @@ const Contacts = () => {
         </div>
       </div>
 
-      {/* Tabs & Content */}
       <Tabs defaultValue="all" onValueChange={setActiveTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="all">All Contacts</TabsTrigger>
@@ -224,6 +226,12 @@ const Contacts = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AddContactModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdd={handleAddContact}
+      />
     </div>
   );
 };

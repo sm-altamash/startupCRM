@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Plus, MoreHorizontal, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import AddDealModal from "@/components/modals/AddDealModal";
+import { BriefcasePlus } from "lucide-react";
 
 // Types
 interface Deal {
@@ -107,11 +108,11 @@ const columnOrder = ["column-1", "column-2", "column-3", "column-4"];
 const Deals = () => {
   const [deals, setDeals] = useState(initialDeals);
   const [columns, setColumns] = useState(initialColumns);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const handleDragEnd = (result) => {
     const { destination, source, draggableId } = result;
 
-    // If there's no destination or the item was dropped back in the same position
     if (!destination || 
         (destination.droppableId === source.droppableId && 
          destination.index === source.index)) {
@@ -121,7 +122,6 @@ const Deals = () => {
     const sourceColumn = columns[source.droppableId];
     const destColumn = columns[destination.droppableId];
 
-    // If moving within the same column
     if (sourceColumn.id === destColumn.id) {
       const newDealIds = Array.from(sourceColumn.dealIds);
       newDealIds.splice(source.index, 1);
@@ -139,7 +139,6 @@ const Deals = () => {
       return;
     }
 
-    // Moving from one column to another
     const sourceIds = Array.from(sourceColumn.dealIds);
     sourceIds.splice(source.index, 1);
     const newSourceColumn = {
@@ -161,21 +160,33 @@ const Deals = () => {
     });
   };
 
+  const handleAddDeal = (newDeal: any) => {
+    setDeals((prev) => ({
+      ...prev,
+      [newDeal.id]: newDeal,
+    }));
+    setColumns((prev) => ({
+      ...prev,
+      "column-1": {
+        ...prev["column-1"],
+        dealIds: [...prev["column-1"].dealIds, newDeal.id],
+      },
+    }));
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Deal Pipeline</h1>
           <p className="text-muted-foreground">Track and manage your deals</p>
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button onClick={() => setIsAddModalOpen(true)}>
+          <BriefcasePlus className="h-4 w-4 mr-2" />
           Add Deal
         </Button>
       </div>
 
-      {/* Deal summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {columnOrder.map((columnId, index) => {
           const column = columns[columnId];
@@ -205,7 +216,6 @@ const Deals = () => {
         })}
       </div>
 
-      {/* Deal columns */}
       <div className="pb-6">
         <DragDropContext onDragEnd={handleDragEnd}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -288,6 +298,12 @@ const Deals = () => {
           </div>
         </DragDropContext>
       </div>
+
+      <AddDealModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdd={handleAddDeal}
+      />
     </div>
   );
 };

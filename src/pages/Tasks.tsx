@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,7 +16,8 @@ import {
   Circle,
   MoreHorizontal,
   Filter,
-  CalendarDays
+  CalendarDays,
+  ListPlus
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -27,8 +27,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import AddTaskModal from "@/components/modals/AddTaskModal";
 
-// Sample data
 interface Task {
   id: number;
   title: string;
@@ -106,10 +106,12 @@ const tasks: Task[] = [
 ];
 
 const Tasks = () => {
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [tasksList, setTasksList] = useState(tasks);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
-  const filteredTasks = tasks.filter((task) => {
+  const filteredTasks = tasksList.filter((task) => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase());
     
     if (activeTab === "all") return matchesSearch;
@@ -134,21 +136,23 @@ const Tasks = () => {
     today: Clock,
   };
 
+  const handleAddTask = (newTask: any) => {
+    setTasksList((prev) => [...prev, newTask]);
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Tasks</h1>
           <p className="text-muted-foreground">Track and manage your tasks</p>
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button onClick={() => setIsAddModalOpen(true)}>
+          <ListPlus className="h-4 w-4 mr-2" />
           Add Task
         </Button>
       </div>
 
-      {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="relative col-span-2">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
@@ -184,7 +188,6 @@ const Tasks = () => {
         </div>
       </div>
 
-      {/* Tasks list */}
       <Tabs defaultValue="all" onValueChange={setActiveTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="all">All Tasks</TabsTrigger>
@@ -276,6 +279,12 @@ const Tasks = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AddTaskModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdd={handleAddTask}
+      />
     </div>
   );
 };
