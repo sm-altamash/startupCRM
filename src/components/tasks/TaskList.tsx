@@ -1,6 +1,8 @@
 
 import { Task } from "@/types/task";
 import { TaskItem } from "./TaskItem";
+import { Button } from "@/components/ui/button";
+import { Plus, CheckCircle2 } from "lucide-react";
 
 interface TaskListProps {
   tasks: Task[];

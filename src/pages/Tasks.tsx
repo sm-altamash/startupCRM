@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, Filter, CalendarDays, MoreHorizontal } from "lucide-react";
+import { Search, Plus, Filter, CalendarDays, MoreHorizontal, ListPlus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -23,19 +23,6 @@ import { useToast } from "@/hooks/use-toast";
 import AddTaskModal from "@/components/modals/AddTaskModal";
 import { TaskList } from "@/components/tasks/TaskList";
 import { Task } from "@/types/task";
-
-interface Task {
-  id: number;
-  title: string;
-  dueDate: string;
-  status: "completed" | "upcoming" | "overdue" | "today";
-  priority: "high" | "medium" | "low";
-  related: {
-    type: "contact" | "deal";
-    name: string;
-    initials: string;
-  };
-}
 
 const tasks: Task[] = [
   {

@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, CheckCircle2, Calendar, AlertCircle, Clock } from "lucide-react";
 
 interface TaskItemProps {
   task: Task;
