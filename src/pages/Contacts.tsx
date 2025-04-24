@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,64 +27,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import AddContactModal from "@/components/modals/AddContactModal";
-
-const contacts = [
-  {
-    id: 1,
-    name: "Alex Johnson",
-    company: "Acme Corp",
-    email: "alex@acmecorp.com",
-    phone: "555-123-4567",
-    location: "San Francisco, CA",
-    status: "customer",
-    lastContact: "2 days ago",
-    initials: "AJ",
-  },
-  {
-    id: 2,
-    name: "Samantha Lee",
-    company: "Globex Inc",
-    email: "sam@globexinc.com",
-    phone: "555-987-6543",
-    location: "New York, NY",
-    status: "lead",
-    lastContact: "1 week ago",
-    initials: "SL",
-  },
-  {
-    id: 3,
-    name: "David Martinez",
-    company: "Initech",
-    email: "david@initech.com",
-    phone: "555-456-7890",
-    location: "Austin, TX",
-    status: "lead",
-    lastContact: "Yesterday",
-    initials: "DM",
-  },
-  {
-    id: 4,
-    name: "Emily Wong",
-    company: "Massive Dynamic",
-    email: "emily@massivedynamic.com",
-    phone: "555-789-0123",
-    location: "Seattle, WA",
-    status: "customer",
-    lastContact: "3 days ago",
-    initials: "EW",
-  },
-  {
-    id: 5,
-    name: "James Wilson",
-    company: "Stark Industries",
-    email: "james@starkindustries.com",
-    phone: "555-234-5678",
-    location: "Chicago, IL",
-    status: "prospect",
-    lastContact: "5 days ago",
-    initials: "JW",
-  },
-];
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 const statusColors = {
   lead: "bg-yellow-100 text-yellow-800",
@@ -94,30 +38,96 @@ const statusColors = {
 
 const Contacts = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [contactsList, setContactsList] = useState(contacts);
+  const [contactsList, setContactsList] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchContacts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setContactsList(data || []);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error fetching contacts",
+        description: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchContacts();
+  }, []);
 
   const filteredContacts = contactsList.filter(contact => {
     const matchesSearch = 
-      contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.email.toLowerCase().includes(searchTerm.toLowerCase());
+      contact.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contact.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contact.email?.toLowerCase().includes(searchTerm.toLowerCase());
     
     if (activeTab === "all") return matchesSearch;
     return matchesSearch && contact.status === activeTab;
   });
 
-  const handleAddContact = (newContact: any) => {
-    setContactsList((prev) => [...prev, newContact]);
+  const handleAddContact = async (newContact: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('contacts')
+        .insert([{
+          ...newContact,
+          user_id: supabase.auth.getUser().then(({ data }) => data.user?.id),
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      setContactsList(prev => [data, ...prev]);
+      toast({
+        title: "Contact added",
+        description: "New contact has been successfully created.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error adding contact",
+        description: error.message,
+      });
+    }
   };
 
-  const handleEdit = (contactId: number) => {
+  const handleEdit = async (contactId: string) => {
+    // This will be implemented in the next update
     console.log("Edit contact:", contactId);
   };
 
-  const handleDelete = (contactId: number) => {
-    setContactsList(prev => prev.filter(contact => contact.id !== contactId));
+  const handleDelete = async (contactId: string) => {
+    try {
+      const { error } = await supabase
+        .from('contacts')
+        .delete()
+        .eq('id', contactId);
+
+      if (error) throw error;
+      setContactsList(prev => prev.filter(contact => contact.id !== contactId));
+      toast({
+        title: "Contact deleted",
+        description: "Contact has been successfully removed.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error deleting contact",
+        description: error.message,
+      });
+    }
   };
 
   return (
@@ -184,14 +194,14 @@ const Contacts = () => {
                         <div className="flex space-x-4">
                           <Avatar className="h-12 w-12 mt-1">
                             <AvatarFallback className="bg-primary/10 text-primary">
-                              {contact.initials}
+                              {contact.name?.charAt(0).toUpperCase() + contact.name?.split(" ")[1]?.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div>
                             <div className="flex items-center mb-1">
                               <h3 className="font-medium">{contact.name}</h3>
                               <Badge className={`ml-2 ${statusColors[contact.status as keyof typeof statusColors]}`}>
-                                {contact.status.charAt(0).toUpperCase() + contact.status.slice(1)}
+                                {contact.status?.charAt(0).toUpperCase() + contact.status?.slice(1)}
                               </Badge>
                             </div>
                             <div className="text-sm text-muted-foreground mb-2">
