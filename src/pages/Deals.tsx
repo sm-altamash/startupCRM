@@ -4,11 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Plus, MoreHorizontal, ChevronDown, Briefcase } from "lucide-react";
+import { Plus, MoreHorizontal, ChevronDown, Briefcase, Edit, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AddDealModal from "@/components/modals/AddDealModal";
 
-// Types
 interface Deal {
   id: string;
   title: string;
@@ -26,7 +25,6 @@ interface Column {
   color: string;
 }
 
-// Sample data
 const initialDeals: Record<string, Deal> = {
   "deal-1": {
     id: "deal-1",
@@ -173,6 +171,18 @@ const Deals = () => {
     }));
   };
 
+  const handleEdit = (dealId: string) => {
+    console.log("Edit deal:", dealId);
+  };
+
+  const handleDelete = (dealId: string) => {
+    setDeals(prev => {
+      const newDeals = { ...prev };
+      delete newDeals[dealId];
+      return newDeals;
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -259,9 +269,24 @@ const Deals = () => {
                                       <h4 className="font-medium text-sm">{deal.title}</h4>
                                       <p className="text-xs text-muted-foreground">{deal.company}</p>
                                     </div>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6">
-                                      <MoreHorizontal className="h-3.5 w-3.5" />
-                                    </Button>
+                                    <div className="flex items-center space-x-1">
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-6 w-6 text-slate-500 hover:text-primary"
+                                        onClick={() => handleEdit(deal.id)}
+                                      >
+                                        <Edit className="h-3.5 w-3.5" />
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-6 w-6 text-slate-500 hover:text-red-500"
+                                        onClick={() => handleDelete(deal.id)}
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </div>
                                   </div>
                                   <div className="flex items-center justify-between mt-3">
                                     <Badge variant="secondary" className="text-xs font-normal">

@@ -14,7 +14,9 @@ import {
   Mail, 
   MapPin, 
   Building,
-  UserPlus
+  UserPlus,
+  Edit,
+  Trash2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -108,6 +110,14 @@ const Contacts = () => {
 
   const handleAddContact = (newContact: any) => {
     setContactsList((prev) => [...prev, newContact]);
+  };
+
+  const handleEdit = (contactId: number) => {
+    console.log("Edit contact:", contactId);
+  };
+
+  const handleDelete = (contactId: number) => {
+    setContactsList(prev => prev.filter(contact => contact.id !== contactId));
   };
 
   return (
@@ -205,9 +215,24 @@ const Contacts = () => {
                           </div>
                         </div>
                         <div>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center space-x-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-slate-500 hover:text-primary"
+                              onClick={() => handleEdit(contact.id)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-slate-500 hover:text-red-500"
+                              onClick={() => handleDelete(contact.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                           <div className="text-xs text-muted-foreground text-right mt-1">
                             Last contacted: {contact.lastContact}
                           </div>

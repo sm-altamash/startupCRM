@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,11 +13,11 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
-  Circle,
-  MoreHorizontal,
   Filter,
   CalendarDays,
-  ListPlus
+  ListPlus,
+  Trash2,
+  Edit
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -140,6 +140,14 @@ const Tasks = () => {
     setTasksList((prev) => [...prev, newTask]);
   };
 
+  const handleEdit = (taskId: number) => {
+    console.log("Edit task:", taskId);
+  };
+
+  const handleDelete = (taskId: number) => {
+    setTasksList(prev => prev.filter(task => task.id !== taskId));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
@@ -249,9 +257,24 @@ const Tasks = () => {
                                     {task.related.initials}
                                   </AvatarFallback>
                                 </Avatar>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
+                                <div className="flex items-center space-x-1">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 text-slate-500 hover:text-primary"
+                                    onClick={() => handleEdit(task.id)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 text-slate-500 hover:text-red-500"
+                                    onClick={() => handleDelete(task.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                             
