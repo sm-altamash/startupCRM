@@ -4,10 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Plus, MoreHorizontal, ChevronDown } from "lucide-react";
+import { Plus, MoreHorizontal, ChevronDown, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AddDealModal from "@/components/modals/AddDealModal";
-import { BriefcasePlus } from "lucide-react";
 
 // Types
 interface Deal {
@@ -182,7 +181,7 @@ const Deals = () => {
           <p className="text-muted-foreground">Track and manage your deals</p>
         </div>
         <Button onClick={() => setIsAddModalOpen(true)}>
-          <BriefcasePlus className="h-4 w-4 mr-2" />
+          <Briefcase className="h-4 w-4 mr-2" />
           Add Deal
         </Button>
       </div>
