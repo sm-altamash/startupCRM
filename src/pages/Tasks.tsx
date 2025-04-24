@@ -2,24 +2,8 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Search,
-  Plus,
-  Calendar,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  Filter,
-  CalendarDays,
-  ListPlus,
-  Trash2,
-  Edit,
-  MoreHorizontal
-} from "lucide-react";
+import { Search, Plus, Filter, CalendarDays, MoreHorizontal } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +21,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import AddTaskModal from "@/components/modals/AddTaskModal";
+import { TaskList } from "@/components/tasks/TaskList";
+import { Task } from "@/types/task";
 
 interface Task {
   id: number;
@@ -136,17 +122,25 @@ const Tasks = () => {
     return matchesSearch;
   });
 
-  const priorityColors = {
-    high: "text-red-500 border-red-200",
-    medium: "text-amber-500 border-amber-200",
-    low: "text-green-500 border-green-200",
-  };
+  const handleStatusChange = (taskId: number, completed: boolean) => {
+    setTasksList((prev) =>
+      prev.map((task) => {
+        if (task.id === taskId) {
+          return {
+            ...task,
+            status: completed ? "completed" : "upcoming",
+          };
+        }
+        return task;
+      })
+    );
 
-  const statusIcons = {
-    completed: CheckCircle2,
-    upcoming: Calendar,
-    overdue: AlertCircle,
-    today: Clock,
+    toast({
+      title: completed ? "Task completed" : "Task uncompleted",
+      description: completed
+        ? "Task has been marked as complete."
+        : "Task has been marked as incomplete.",
+    });
   };
 
   const handleAddTask = (newTask: any) => {
@@ -252,92 +246,12 @@ const Tasks = () => {
         <TabsContent value={activeTab} className="mt-0">
           <Card>
             <CardContent className="p-0">
-              <div className="grid grid-cols-1 divide-y">
-                {filteredTasks.length > 0 ? (
-                  filteredTasks.map((task) => {
-                    const StatusIcon = statusIcons[task.status];
-                    
-                    return (
-                      <div 
-                        key={task.id} 
-                        className={`p-4 hover:bg-gray-50 ${
-                          task.status === "completed" ? "opacity-60" : ""
-                        }`}
-                      >
-                        <div className="flex items-start">
-                          <Checkbox 
-                            id={`task-${task.id}`} 
-                            className="mt-1 h-5 w-5"
-                            checked={task.status === "completed"}
-                          />
-                          <div className="ml-3 flex-grow">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <label 
-                                  htmlFor={`task-${task.id}`}
-                                  className={`font-medium cursor-pointer ${
-                                    task.status === "completed" ? "line-through text-muted-foreground" : ""
-                                  }`}
-                                >
-                                  {task.title}
-                                </label>
-                                <div className="flex items-center mt-1 space-x-2">
-                                  <div className="flex items-center text-sm text-muted-foreground">
-                                    <StatusIcon className="h-3.5 w-3.5 mr-1.5" />
-                                    <span>{task.dueDate}</span>
-                                  </div>
-                                  <Badge 
-                                    variant="outline" 
-                                    className={`text-xs font-normal ${priorityColors[task.priority]}`}
-                                  >
-                                    {task.priority}
-                                  </Badge>
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-center space-x-2">
-                                <Avatar className="h-6 w-6">
-                                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
-                                    {task.related.initials}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="flex items-center space-x-1">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8 text-slate-500 hover:text-primary"
-                                    onClick={() => handleEdit(task)}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8 text-slate-500 hover:text-red-500"
-                                    onClick={() => handleDelete(task)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="p-8 text-center">
-                    <CheckCircle2 className="h-12 w-12 mx-auto text-muted mb-3 opacity-50" />
-                    <h3 className="text-lg font-medium">No tasks found</h3>
-                    <p className="text-muted-foreground mt-1">Create a new task to get started</p>
-                    <Button className="mt-4">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Task
-                    </Button>
-                  </div>
-                )}
-              </div>
+              <TaskList
+                tasks={filteredTasks}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onStatusChange={handleStatusChange}
+              />
             </CardContent>
           </Card>
         </TabsContent>
