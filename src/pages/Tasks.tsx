@@ -17,8 +17,16 @@ import {
   CalendarDays,
   ListPlus,
   Trash2,
-  Edit
+  Edit,
+  MoreHorizontal
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +35,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 import AddTaskModal from "@/components/modals/AddTaskModal";
 
 interface Task {
@@ -107,9 +116,13 @@ const tasks: Task[] = [
 
 const Tasks = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [tasksList, setTasksList] = useState(tasks);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const { toast } = useToast();
 
   const filteredTasks = tasksList.filter((task) => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -140,12 +153,43 @@ const Tasks = () => {
     setTasksList((prev) => [...prev, newTask]);
   };
 
-  const handleEdit = (taskId: number) => {
-    console.log("Edit task:", taskId);
+  const handleEdit = (task: Task) => {
+    setSelectedTask(task);
+    setIsEditModalOpen(true);
   };
 
-  const handleDelete = (taskId: number) => {
-    setTasksList(prev => prev.filter(task => task.id !== taskId));
+  const handleDelete = (task: Task) => {
+    setSelectedTask(task);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (selectedTask) {
+      setTasksList(prev => prev.filter(task => task.id !== selectedTask.id));
+      toast({
+        title: "Task deleted",
+        description: "Task has been successfully removed.",
+      });
+      setIsDeleteModalOpen(false);
+      setSelectedTask(null);
+    }
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedTask) {
+      setTasksList(prev =>
+        prev.map(task =>
+          task.id === selectedTask.id ? selectedTask : task
+        )
+      );
+      toast({
+        title: "Task updated",
+        description: "Task has been successfully updated.",
+      });
+      setIsEditModalOpen(false);
+      setSelectedTask(null);
+    }
   };
 
   return (
@@ -262,7 +306,7 @@ const Tasks = () => {
                                     variant="ghost" 
                                     size="icon" 
                                     className="h-8 w-8 text-slate-500 hover:text-primary"
-                                    onClick={() => handleEdit(task.id)}
+                                    onClick={() => handleEdit(task)}
                                   >
                                     <Edit className="h-4 w-4" />
                                   </Button>
@@ -270,17 +314,13 @@ const Tasks = () => {
                                     variant="ghost" 
                                     size="icon" 
                                     className="h-8 w-8 text-slate-500 hover:text-red-500"
-                                    onClick={() => handleDelete(task.id)}
+                                    onClick={() => handleDelete(task)}
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </div>
                               </div>
                             </div>
-                            
-                            <p className="mt-2 text-xs text-muted-foreground">
-                              Related to: {task.related.name}
-                            </p>
                           </div>
                         </div>
                       </div>
@@ -306,8 +346,56 @@ const Tasks = () => {
       <AddTaskModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onAdd={handleAddTask}
+        onAdd={(task) => {
+          setTasksList((prev) => [...prev, task]);
+          toast({
+            title: "Task added",
+            description: "New task has been successfully created.",
+          });
+        }}
       />
+
+      <Dialog open={isEditModalOpen} onOpenChange={() => setIsEditModalOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Task</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Input
+                  value={selectedTask?.title || ""}
+                  onChange={(e) => setSelectedTask(prev => prev ? {...prev, title: e.target.value} : null)}
+                  placeholder="Task title"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Save changes</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeleteModalOpen} onOpenChange={() => setIsDeleteModalOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Task</DialogTitle>
+          </DialogHeader>
+          <p>Are you sure you want to delete this task? This action cannot be undone.</p>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" variant="destructive" onClick={confirmDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -7,6 +7,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Plus, MoreHorizontal, ChevronDown, Briefcase, Edit, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AddDealModal from "@/components/modals/AddDealModal";
+import { useToast } from "@/components/ui/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface Deal {
   id: string;
@@ -106,6 +109,10 @@ const Deals = () => {
   const [deals, setDeals] = useState(initialDeals);
   const [columns, setColumns] = useState(initialColumns);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+  const { toast } = useToast();
 
   const handleDragEnd = (result) => {
     const { destination, source, draggableId } = result;
@@ -172,15 +179,61 @@ const Deals = () => {
   };
 
   const handleEdit = (dealId: string) => {
-    console.log("Edit deal:", dealId);
+    const deal = deals[dealId];
+    setSelectedDeal(deal);
+    setIsEditModalOpen(true);
   };
 
   const handleDelete = (dealId: string) => {
-    setDeals(prev => {
-      const newDeals = { ...prev };
-      delete newDeals[dealId];
-      return newDeals;
-    });
+    setSelectedDeal(deals[dealId]);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (selectedDeal) {
+      setDeals(prev => {
+        const newDeals = { ...prev };
+        delete newDeals[selectedDeal.id];
+        return newDeals;
+      });
+      
+      const columnWithDeal = Object.values(columns).find(col => 
+        col.dealIds.includes(selectedDeal.id)
+      );
+      
+      if (columnWithDeal) {
+        setColumns(prev => ({
+          ...prev,
+          [columnWithDeal.id]: {
+            ...columnWithDeal,
+            dealIds: columnWithDeal.dealIds.filter(id => id !== selectedDeal.id)
+          }
+        }));
+      }
+
+      toast({
+        title: "Deal deleted",
+        description: "Deal has been successfully removed.",
+      });
+      setIsDeleteModalOpen(false);
+      setSelectedDeal(null);
+    }
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedDeal) {
+      setDeals(prev => ({
+        ...prev,
+        [selectedDeal.id]: selectedDeal
+      }));
+      toast({
+        title: "Deal updated",
+        description: "Deal has been successfully updated.",
+      });
+      setIsEditModalOpen(false);
+      setSelectedDeal(null);
+    }
   };
 
   return (
@@ -328,6 +381,59 @@ const Deals = () => {
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddDeal}
       />
+
+      <Dialog open={isEditModalOpen} onOpenChange={() => setIsEditModalOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Deal</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Input
+                  value={selectedDeal?.title || ""}
+                  onChange={(e) => setSelectedDeal(prev => prev ? {...prev, title: e.target.value} : null)}
+                  placeholder="Deal title"
+                />
+                <Input
+                  value={selectedDeal?.company || ""}
+                  onChange={(e) => setSelectedDeal(prev => prev ? {...prev, company: e.target.value} : null)}
+                  placeholder="Company name"
+                />
+                <Input
+                  value={selectedDeal?.value.replace(/[$,]/g, '') || ""}
+                  onChange={(e) => setSelectedDeal(prev => prev ? {...prev, value: `$${e.target.value}`} : null)}
+                  placeholder="Deal value"
+                  type="number"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Save changes</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeleteModalOpen} onOpenChange={() => setIsDeleteModalOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Deal</DialogTitle>
+          </DialogHeader>
+          <p>Are you sure you want to delete this deal? This action cannot be undone.</p>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" variant="destructive" onClick={confirmDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
