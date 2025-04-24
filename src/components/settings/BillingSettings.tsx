@@ -1,32 +1,22 @@
-
-import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "@/components/ui/use-toast";
 import { CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState } from "react";
+import { useBillingManagement } from "@/hooks/use-billing-management";
 
 export const BillingSettings = () => {
-  const [currentPlan, setCurrentPlan] = useState("Free");
   const [showConfirmUpgrade, setShowConfirmUpgrade] = useState(false);
-  const [selectedUpgradePlan, setSelectedUpgradePlan] = useState("");
-
-  const handleUpgrade = (planName: string) => {
-    setSelectedUpgradePlan(planName);
-    setShowConfirmUpgrade(true);
-  };
-
-  const confirmUpgrade = () => {
-    setCurrentPlan(selectedUpgradePlan);
-    setShowConfirmUpgrade(false);
-    
-    toast({
-      title: "Plan upgraded",
-      description: `Your subscription has been upgraded to ${selectedUpgradePlan}. Thank you for your support!`,
-    });
-  };
+  const {
+    currentPlan,
+    selectedUpgradePlan,
+    plans,
+    billingHistory,
+    handleUpgrade,
+    confirmUpgrade,
+  } = useBillingManagement();
 
   return (
     <Card>
@@ -96,30 +86,7 @@ export const BillingSettings = () => {
         <div className="space-y-4">
           <h3 className="font-medium">Available Plans</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              { 
-                name: "Starter", 
-                price: "$9", 
-                description: "For small startups",
-                features: ["Up to 250 contacts", "Full pipeline tools", "Email integration"],
-                highlight: currentPlan === "Starter"
-              },
-              { 
-                name: "Professional", 
-                price: "$29", 
-                description: "For growing teams",
-                features: ["Unlimited contacts", "Advanced reporting", "API access", "Team collaboration"],
-                recommended: true,
-                highlight: currentPlan === "Professional"
-              },
-              { 
-                name: "Enterprise", 
-                price: "$99", 
-                description: "For larger businesses",
-                features: ["Dedicated support", "Custom fields", "Advanced security", "Workflow automation"],
-                highlight: currentPlan === "Enterprise"
-              },
-            ].map((plan, i) => (
+            {plans.map((plan, i) => (
               <Card 
                 key={i} 
                 className={`${
@@ -180,11 +147,7 @@ export const BillingSettings = () => {
             <div className="space-y-4">
               <h3 className="font-medium">Billing History</h3>
               <div className="space-y-2">
-                {[
-                  { date: "Apr 24, 2025", amount: "$29.00", status: "paid" },
-                  { date: "Mar 24, 2025", amount: "$29.00", status: "paid" },
-                  { date: "Feb 24, 2025", amount: "$29.00", status: "paid" },
-                ].map((invoice, i) => (
+                {billingHistory.map((invoice, i) => (
                   <div key={i} className="flex justify-between items-center p-3 border rounded-lg">
                     <div>
                       <p className="font-medium">{invoice.date}</p>
@@ -232,7 +195,6 @@ export const BillingSettings = () => {
           </>
         )}
 
-        {/* Confirm upgrade dialog */}
         <Dialog open={showConfirmUpgrade} onOpenChange={setShowConfirmUpgrade}>
           <DialogContent>
             <DialogHeader>

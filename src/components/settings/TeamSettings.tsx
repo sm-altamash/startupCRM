@@ -1,5 +1,3 @@
-
-import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,72 +5,35 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Users, Edit } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
+import { useTeamManagement } from "@/hooks/use-team-management";
 
 export const TeamSettings = () => {
-  const [teamMembers, setTeamMembers] = useState([
-    { id: 1, name: "Alex Johnson", email: "alex@startup.com", role: "Admin", initials: "AJ", status: "active" },
-    { id: 2, name: "Sarah Chen", email: "sarah@startup.com", role: "Member", initials: "SC", status: "active" },
-    { id: 3, name: "Michael Lee", email: "michael@startup.com", role: "Member", initials: "ML", status: "pending" }
-  ]);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [showTeamEditDialog, setShowTeamEditDialog] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<any>(null);
-  const [newTeamMember, setNewTeamMember] = useState({ email: "", role: "Member" });
+  const {
+    teamMembers,
+    selectedMember,
+    newTeamMember,
+    setSelectedMember,
+    setNewTeamMember,
+    inviteTeamMember,
+    updateTeamMember,
+    removeTeamMember,
+  } = useTeamManagement();
 
   const handleInviteTeamMember = () => {
-    if (!newTeamMember.email) {
-      toast({
-        title: "Error",
-        description: "Please enter an email address.",
-        variant: "destructive",
-      });
-      return;
+    if (inviteTeamMember()) {
+      setInviteDialogOpen(false);
     }
-
-    const newMember = {
-      id: teamMembers.length + 1,
-      name: newTeamMember.email.split('@')[0],
-      email: newTeamMember.email,
-      role: newTeamMember.role,
-      initials: newTeamMember.email.substring(0, 2).toUpperCase(),
-      status: "pending"
-    };
-
-    setTeamMembers([...teamMembers, newMember]);
-    setNewTeamMember({ email: "", role: "Member" });
-    setInviteDialogOpen(false);
-    
-    toast({
-      title: "Invitation sent",
-      description: `An invitation has been sent to ${newTeamMember.email}.`,
-    });
   };
 
   const handleEditTeamMember = () => {
-    if (!selectedMember) return;
-    
-    setTeamMembers(members => 
-      members.map(member => 
-        member.id === selectedMember.id ? selectedMember : member
-      )
-    );
-    
-    setShowTeamEditDialog(false);
-    toast({
-      title: "Team member updated",
-      description: `${selectedMember.name}'s information has been updated.`,
-    });
-  };
-
-  const handleRemoveTeamMember = (id: number) => {
-    setTeamMembers(members => members.filter(member => member.id !== id));
-    toast({
-      title: "Team member removed",
-      description: "The team member has been removed from your organization.",
-    });
+    if (updateTeamMember()) {
+      setShowTeamEditDialog(false);
+    }
   };
 
   return (
@@ -89,7 +50,6 @@ export const TeamSettings = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Team member list */}
           <div className="space-y-4">
             {teamMembers.map((member) => (
               <div 
@@ -160,7 +120,6 @@ export const TeamSettings = () => {
         </div>
       </CardContent>
 
-      {/* Team member invite dialog */}
       <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -207,7 +166,6 @@ export const TeamSettings = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit team member dialog */}
       <Dialog open={showTeamEditDialog} onOpenChange={setShowTeamEditDialog}>
         <DialogContent>
           <DialogHeader>
@@ -266,7 +224,7 @@ export const TeamSettings = () => {
               variant="destructive" 
               onClick={() => {
                 if (selectedMember) {
-                  handleRemoveTeamMember(selectedMember.id);
+                  removeTeamMember(selectedMember.id);
                   setShowTeamEditDialog(false);
                 }
               }}
