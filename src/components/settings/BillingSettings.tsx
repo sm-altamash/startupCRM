@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,12 @@ export const BillingSettings = () => {
     handleUpgrade,
     confirmUpgrade,
   } = useBillingManagement();
+
+  // Mark the current plan with highlight property
+  const plansWithHighlight = plans.map(plan => ({
+    ...plan,
+    highlight: plan.name === currentPlan
+  }));
 
   return (
     <Card>
@@ -86,7 +93,7 @@ export const BillingSettings = () => {
         <div className="space-y-4">
           <h3 className="font-medium">Available Plans</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {plans.map((plan, i) => (
+            {plansWithHighlight.map((plan, i) => (
               <Card 
                 key={i} 
                 className={`${
@@ -130,7 +137,10 @@ export const BillingSettings = () => {
                     <Button 
                       className="w-full" 
                       variant={plan.recommended ? "default" : "outline"}
-                      onClick={() => handleUpgrade(plan.name)}
+                      onClick={() => {
+                        handleUpgrade(plan.name);
+                        setShowConfirmUpgrade(true);
+                      }}
                     >
                       {plan.recommended ? "Recommended" : "Select Plan"}
                     </Button>
@@ -232,7 +242,10 @@ export const BillingSettings = () => {
               <Button variant="outline" onClick={() => setShowConfirmUpgrade(false)}>
                 Cancel
               </Button>
-              <Button onClick={confirmUpgrade}>
+              <Button onClick={() => {
+                confirmUpgrade();
+                setShowConfirmUpgrade(false);
+              }}>
                 Confirm Upgrade
               </Button>
             </DialogFooter>

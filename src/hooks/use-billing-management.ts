@@ -8,6 +8,7 @@ type BillingPlan = {
   description: string;
   features: string[];
   recommended?: boolean;
+  highlight?: boolean; // Added the missing highlight property
 };
 
 export const useBillingManagement = () => {
